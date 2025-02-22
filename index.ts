@@ -1,7 +1,6 @@
 import WebSocket from 'ws';
 import { DigestClient } from 'digest-fetch';
 import { createDatabase, createTable, db, dbConfig, insertData } from './db';
-import { createConnection } from 'mysql2/promise';
 
 // Camera credentials
 const CAMERA_IP = process.env.CAMERA_IP;
