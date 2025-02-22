@@ -71,7 +71,6 @@ async function startWebSocket(sessionId: string): Promise<void> {
     });
 
     ws.on('message', async (e: string) => {
-        console.log(e);
         try {
             const jsonData: WebSocketMessage = JSON.parse(e);
             if (jsonData?.params?.notification?.topic === 'tns1:VideoSource/tnsaxis:Thermometry/TemperatureDetection') {
@@ -85,6 +84,7 @@ async function startWebSocket(sessionId: string): Promise<void> {
                                 'Content-Type': 'application/json',
                             },
                         });
+                        console.log('Data sent to webhook');
                     }
                 }
             }
