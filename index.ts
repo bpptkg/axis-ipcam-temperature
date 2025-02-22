@@ -81,6 +81,7 @@ async function startWebSocket(sessionId: string): Promise<void> {
                             method: 'POST',
                             body: JSON.stringify(data),
                             headers: {
+                                'Authorization': `Basic ${btoa(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`)}`,
                                 'Content-Type': 'application/json',
                             },
                         });
