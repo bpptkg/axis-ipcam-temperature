@@ -1,5 +1,7 @@
 import WebSocket from 'ws';
 import { DigestClient } from 'digest-fetch';
+import { createDatabase, createTable, db, dbConfig, insertData } from './db';
+import { createConnection } from 'mysql2/promise';
 
 // Camera credentials
 const CAMERA_IP = process.env.CAMERA_IP;
@@ -10,7 +12,19 @@ interface WebSocketMessage {
     params?: {
         notification?: {
             topic?: string;
-            message?: string;
+            message?: {
+                data: {
+                    TemperatureUnit: string
+                    MaxTempPositionX: string
+                    MaximumTemp: string
+                    MinTempPositionY: string
+                    AverageTemp: string
+                    MinTempPositionX: string
+                    MaxTempPositionY: string
+                    AreaName: string
+                    MinimumTemp: string
+                }
+            };
         };
     };
 }
@@ -58,11 +72,21 @@ async function startWebSocket(sessionId: string): Promise<void> {
         }));
     });
 
-    ws.on('message', (data: string) => {
+    ws.on('message', async (data: string) => {
         try {
             const jsonData: WebSocketMessage = JSON.parse(data);
             if (jsonData?.params?.notification?.topic === 'tns1:VideoSource/tnsaxis:Thermometry/TemperatureDetection') {
-                console.log(jsonData.params.notification.message);
+                const data = jsonData?.params?.notification?.message?.data
+                if (data) {
+                    console.log(data);
+                    const tableName = data.AreaName.split(' ').join('_');
+                    await createTable(tableName)
+                    await insertData(tableName, {
+                        min: data.MinimumTemp,
+                        max: data.MaximumTemp,
+                        avg: data.AverageTemp,
+                    })
+                }
             }
         } catch (error) {
             console.error('Error parsing JSON:', error);
@@ -80,6 +104,8 @@ async function startWebSocket(sessionId: string): Promise<void> {
 
 // Main function
 (async () => {
+    await createDatabase()
+
     const sessionId = await getSessionId();
     if (sessionId) {
         console.log('Session ID:', sessionId);
