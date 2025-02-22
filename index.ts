@@ -1,6 +1,5 @@
 import WebSocket from 'ws';
 import { DigestClient } from 'digest-fetch';
-import { createDatabase, createTable, db, dbConfig, insertData } from './db';
 
 // Camera credentials
 const CAMERA_IP = process.env.CAMERA_IP;
@@ -78,14 +77,15 @@ async function startWebSocket(sessionId: string): Promise<void> {
             if (jsonData?.params?.notification?.topic === 'tns1:VideoSource/tnsaxis:Thermometry/TemperatureDetection') {
                 const data = jsonData?.params?.notification?.message?.data
                 if (data) {
-                    console.log(data);
-                    const tableName = data.AreaName.split(' ').join('_');
-                    await createTable(tableName)
-                    await insertData(tableName, {
-                        min: data.MinimumTemp,
-                        max: data.MaximumTemp,
-                        avg: data.AverageTemp,
-                    })
+                    if (process.env.CALLBACK_URL) {
+                        await fetch(process.env.CALLBACK_URL, {
+                            method: 'POST',
+                            body: JSON.stringify(data),
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                    }
                 }
             }
         } catch (error) {
@@ -104,8 +104,6 @@ async function startWebSocket(sessionId: string): Promise<void> {
 
 // Main function
 (async () => {
-    await createDatabase()
-
     const sessionId = await getSessionId();
     if (sessionId) {
         console.log('Session ID:', sessionId);

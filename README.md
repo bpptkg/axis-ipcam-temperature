@@ -1,27 +1,26 @@
-# Axis Camera Temperature Data Acquisition
+# Thermal Camera Data Acquisition for BPPTKG
 
-This project provides a Node.js application for acquiring temperature data from an Axis camera using WebSockets and Digest Authentication.
+This project provides a cloud-based data acquisition service for collecting thermal camera data from an IP camera in the BPPTKG network. Since a direct connection to the IP camera is not possible, data is acquired in the cloud and sent to a webhook in the BPPTKG network.
 
 ## Features
 
 - Connects to an Axis camera via WebSocket
 - Uses Digest Authentication to obtain a session ID
 - Subscribes to temperature detection events
-- Stores temperature data in a database dynamically
+- Sends acquired data to a webhook
 
 ## Requirements
 
 - Node.js (v16+ recommended)
-- An Axis camera with WebSocket and temperature detection support
-- Database setup (configured in `db.ts`)
+- A publicly accessible webhook endpoint to receive data
 
 ## Installation
 
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/bpptkg/axis-ipcam-temperature.git
-   cd axis-ipcam-temperature
+   git clone https://github.com/yourusername/bpptkg-thermal-acquisition.git
+   cd bpptkg-thermal-acquisition
    ```
 
 2. Install dependencies:
@@ -37,10 +36,7 @@ This project provides a Node.js application for acquiring temperature data from 
    CAMERA_IP=your_camera_ip
    USERNAME=your_camera_username
    PASSWORD=your_camera_password
-   MYSQL_HOST=localhost
-   MYSQL_USER=root
-   MYSQL_DB_NAME=axis_ip_camera_temperature
-   MYSQL_PASSWORD="password"
+   CALLBACK_URL=https://your-webhook-endpoint.com
    ```
 
 4. Run the application:
@@ -52,16 +48,25 @@ This project provides a Node.js application for acquiring temperature data from 
 
 - The application fetches a session ID using Digest Authentication.
 - A WebSocket connection is established with the Axis camera.
-- Temperature detection events are received and stored dynamically in the database.
-- Each monitored area gets its own table in the database.
+- Temperature detection events are received and forwarded to the webhook endpoint.
 
-## Database Structure
+## Webhook Payload
 
-Each table is created dynamically based on the `AreaName` in the received event data. The stored fields include:
+The application sends data to the webhook in the following format:
 
-- `min` - Minimum detected temperature
-- `max` - Maximum detected temperature
-- `avg` - Average temperature
+```json
+{
+  "TemperatureUnit": "Celsius",
+  "MaxTempPositionX": "100",
+  "MaximumTemp": "75.2",
+  "MinTempPositionY": "50",
+  "AverageTemp": "70.5",
+  "MinTempPositionX": "120",
+  "MaxTempPositionY": "60",
+  "AreaName": "Merapi_Site_1",
+  "MinimumTemp": "68.1"
+}
+```
 
 ## Contributing
 
