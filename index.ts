@@ -71,9 +71,10 @@ async function startWebSocket(sessionId: string): Promise<void> {
         }));
     });
 
-    ws.on('message', async (data: string) => {
+    ws.on('message', async (e: string) => {
+        console.log(e);
         try {
-            const jsonData: WebSocketMessage = JSON.parse(data);
+            const jsonData: WebSocketMessage = JSON.parse(e);
             if (jsonData?.params?.notification?.topic === 'tns1:VideoSource/tnsaxis:Thermometry/TemperatureDetection') {
                 const data = jsonData?.params?.notification?.message?.data
                 if (data) {
