@@ -1,1 +1,1 @@
-rsync -av --exclude=node_modules  ../axis-ws ubuntu@100.64.240.98:~/
+rsync -av --exclude=node_modules --exclude=ecosystem.config.cjs ../axis-ws ubuntu@100.64.240.98:~/
