@@ -1,0 +1,1 @@
+rsync -av --exclude=node_modules  ../axis-ws ubuntu@100.64.240.98:~/

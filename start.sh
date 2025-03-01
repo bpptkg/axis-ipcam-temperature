@@ -1,0 +1,1 @@
+pm2 start ./index.ts --name axis-ws --interpreter node --interpreter-args "--import tsx --env-file .env"
