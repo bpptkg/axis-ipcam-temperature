@@ -35,6 +35,10 @@ async function getSessionId(): Promise<string | null> {
             method: "GET",
         });
 
+        if (!res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
         return await res.json();
     } catch (error) {
         console.error('Failed to get session ID:', error);
