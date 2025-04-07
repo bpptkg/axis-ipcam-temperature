@@ -94,6 +94,12 @@ async function startWebSocket(sessionId: string): Promise<void> {
                 }
             }
         } catch (error) {
+            ws.removeAllListeners()
+            const sessionId = await getSessionId();
+            if (sessionId) {
+                console.log('New Session ID:', sessionId);
+                startWebSocket(sessionId);
+            }
             console.error('Error parsing JSON:', error);
         }
     });
