@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import { DigestClient } from 'digest-fetch';
+import axios from 'axios';
 
 // Camera credentials
 const CAMERA_IP = process.env.CAMERA_IP;
@@ -81,13 +82,11 @@ async function startWebSocket(sessionId: string): Promise<void> {
                 const data = jsonData?.params?.notification?.message?.data
                 if (data) {
                     if (process.env.CALLBACK_URL) {
-                        await fetch(process.env.CALLBACK_URL, {
-                            method: 'POST',
-                            body: JSON.stringify(data),
+                        await axios.post(process.env.CALLBACK_URL, data, {
                             headers: {
                                 'Authorization': `Basic ${btoa(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`)}`,
                                 'Content-Type': 'application/json',
-                            },
+                            }
                         });
                         console.log('Data sent to webhook');
                     }
@@ -100,16 +99,30 @@ async function startWebSocket(sessionId: string): Promise<void> {
                 console.log('New Session ID:', sessionId);
                 startWebSocket(sessionId);
             }
-            console.error('Error parsing JSON:', error);
+            console.error('Failed to parsing JSON or send data:', error);
         }
     });
 
-    ws.on('error', (error) => {
+    ws.on('error', async (error) => {
         console.error('WebSocket Error:', error);
+
+        ws.removeAllListeners()
+        const sessionId = await getSessionId();
+        if (sessionId) {
+            console.log('New Session ID:', sessionId);
+            startWebSocket(sessionId);
+        }
     });
 
-    ws.on('close', () => {
+    ws.on('close', async () => {
         console.log('WebSocket connection closed');
+
+        ws.removeAllListeners()
+        const sessionId = await getSessionId();
+        if (sessionId) {
+            console.log('New Session ID:', sessionId);
+            startWebSocket(sessionId);
+        }
     });
 }
 
