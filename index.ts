@@ -28,6 +28,8 @@ interface WebSocketMessage {
     };
 }
 
+const waitTenSeconds = async () => new Promise(resolve => setTimeout(resolve, 10000));
+
 // Function to get the session ID using Digest Authentication
 async function getSessionId(): Promise<string | null> {
     try {
@@ -93,31 +95,24 @@ async function startWebSocket(sessionId: string): Promise<void> {
                 }
             }
         } catch (error) {
+            console.error('Failed to parsing JSON or send data:', error.response?.data || error);
             ws.removeAllListeners()
-            const sessionId = await getSessionId();
-            if (sessionId) {
-                console.log('New Session ID:', sessionId);
-                startWebSocket(sessionId);
-            }
-            console.error('Failed to parsing JSON or send data:', error);
+            ws.terminate()
         }
     });
 
     ws.on('error', async (error) => {
         console.error('WebSocket Error:', error);
-
         ws.removeAllListeners()
-        const sessionId = await getSessionId();
-        if (sessionId) {
-            console.log('New Session ID:', sessionId);
-            startWebSocket(sessionId);
-        }
+        ws.terminate()
     });
 
     ws.on('close', async () => {
         console.log('WebSocket connection closed');
-
         ws.removeAllListeners()
+        ws.terminate()
+
+        await waitTenSeconds()
         const sessionId = await getSessionId();
         if (sessionId) {
             console.log('New Session ID:', sessionId);
