@@ -6,6 +6,7 @@ import axios from 'axios';
 const CAMERA_IP = process.env.CAMERA_IP;
 const USERNAME = process.env.USERNAME;
 const PASSWORD = process.env.PASSWORD;
+const STATION_CODE = process.env.STATION_CODE;
 
 interface WebSocketMessage {
     params?: {
@@ -84,7 +85,7 @@ async function startWebSocket(sessionId: string): Promise<void> {
                 const data = jsonData?.params?.notification?.message?.data
                 if (data) {
                     if (process.env.CALLBACK_URL) {
-                        await axios.post(process.env.CALLBACK_URL, data, {
+                        await axios.post(process.env.CALLBACK_URL, { ...data, StationCode: STATION_CODE }, {
                             headers: {
                                 'Authorization': `Basic ${btoa(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`)}`,
                                 'Content-Type': 'application/json',
