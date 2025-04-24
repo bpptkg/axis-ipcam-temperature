@@ -91,20 +91,18 @@ async function startWebSocket(sessionId: string): Promise<void> {
                                 'Content-Type': 'application/json',
                             }
                         });
-                        console.log('Data sent to webhook');
+                        console.log('Data sent to webhook: ', new Date().toISOString());
                     }
                 }
             }
         } catch (error) {
             console.error('Failed to parsing JSON or send data:', error.response?.data || error);
-            ws.removeAllListeners()
             ws.terminate()
         }
     });
 
     ws.on('error', async (error) => {
         console.error('WebSocket Error:', error);
-        ws.removeAllListeners()
         ws.terminate()
     });
 
