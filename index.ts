@@ -7,6 +7,8 @@ const CAMERA_IP = process.env.CAMERA_IP;
 const USERNAME = process.env.USERNAME;
 const PASSWORD = process.env.PASSWORD;
 const STATION_CODE = process.env.STATION_CODE;
+const TEMPERATURE_FILTER_KEY = 'tns1:VideoSource/tnsaxis:Thermometry/TemperatureDetection'
+const DEVIATION_FILTER_KEY = 'tns1:VideoSource/RadiometryAlarm/tnsaxis:DeviationDetection'
 
 interface WebSocketMessage {
     params?: {
@@ -71,7 +73,10 @@ async function startWebSocket(sessionId: string): Promise<void> {
             params: {
                 eventFilterList: [
                     {
-                        topicFilter: "tns1:VideoSource/tnsaxis:Thermometry/TemperatureDetection"
+                        topicFilter: TEMPERATURE_FILTER_KEY
+                    },
+                    {
+                        topicFilter: DEVIATION_FILTER_KEY
                     }
                 ]
             }
@@ -81,19 +86,32 @@ async function startWebSocket(sessionId: string): Promise<void> {
     ws.on('message', async (e: string) => {
         try {
             const jsonData: WebSocketMessage = JSON.parse(e);
-            if (jsonData?.params?.notification?.topic === 'tns1:VideoSource/tnsaxis:Thermometry/TemperatureDetection') {
-                const data = jsonData?.params?.notification?.message?.data
-                if (data) {
-                    if (process.env.CALLBACK_URL) {
-                        await axios.post(process.env.CALLBACK_URL, { ...data, StationCode: STATION_CODE }, {
-                            headers: {
-                                'Authorization': `Basic ${btoa(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`)}`,
-                                'Content-Type': 'application/json',
-                            }
-                        });
-                        console.log('Data sent to webhook: ', new Date().toISOString());
+            const topic = jsonData?.params?.notification?.topic
+            const data = jsonData?.params?.notification?.message?.data
+            console.log(topic);
+
+
+            if (!data || !process.env.CALLBACK_URL) {
+                return
+            }
+
+            if (topic === TEMPERATURE_FILTER_KEY) {
+                await axios.post(process.env.CALLBACK_URL, { ...data, StationCode: STATION_CODE }, {
+                    headers: {
+                        'Authorization': `Basic ${btoa(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`)}`,
+                        'Content-Type': 'application/json',
                     }
-                }
+                });
+                console.log('Temperature data sent to webhook: ', new Date().toISOString());
+
+            } else if (topic === DEVIATION_FILTER_KEY) {
+                await axios.post(`${process.env.CALLBACK_URL}/deviation`, { ...data, StationCode: STATION_CODE }, {
+                    headers: {
+                        'Authorization': `Basic ${btoa(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`)}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                console.log('Deviation data sent to webhook: ', new Date().toISOString());
             }
         } catch (error) {
             console.error('Failed to parsing JSON or send data:', error.response?.data || error);
