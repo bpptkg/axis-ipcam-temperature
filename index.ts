@@ -52,6 +52,8 @@ async function getSessionId(): Promise<string | null> {
     }
 }
 
+let exitTimeout: NodeJS.Timeout;
+
 // Function to start WebSocket connection
 async function startWebSocket(sessionId: string): Promise<void> {
     if (!sessionId) {
@@ -62,6 +64,10 @@ async function startWebSocket(sessionId: string): Promise<void> {
     const ws = new WebSocket(`ws://${CAMERA_IP}/vapix/ws-data-stream?wssession=${sessionId}&sources=events`, {
         rejectUnauthorized: false
     });
+
+    exitTimeout = setTimeout(() => {
+        process.exit(1);
+    }, 5 * 60 * 1000);
 
     ws.on('open', () => {
         console.log('Connected to Axis WebSocket API');
@@ -97,6 +103,11 @@ async function startWebSocket(sessionId: string): Promise<void> {
             }
 
             if (topic === TEMPERATURE_FILTER_KEY) {
+                clearTimeout(exitTimeout);
+                exitTimeout = setTimeout(() => {
+                    process.exit(1);
+                }, 5 * 60 * 1000);
+
                 await axios.post(process.env.CALLBACK_URL, { ...data, StationCode: STATION_CODE }, {
                     headers: {
                         'Authorization': `Basic ${btoa(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`)}`,
