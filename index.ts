@@ -88,10 +88,11 @@ async function startWebSocket(sessionId: string): Promise<void> {
             const jsonData: WebSocketMessage = JSON.parse(e);
             const topic = jsonData?.params?.notification?.topic
             const data = jsonData?.params?.notification?.message?.data
-            console.log(topic);
-
 
             if (!data || !process.env.CALLBACK_URL) {
+                console.log('No data or callback URL, skipping...');
+                console.log({ data, topic });
+
                 return
             }
 
@@ -112,6 +113,8 @@ async function startWebSocket(sessionId: string): Promise<void> {
                     }
                 });
                 console.log('Deviation data sent to webhook: ', new Date().toISOString());
+            } else {
+                console.log('Unknown topic:', topic);
             }
         } catch (error) {
             console.error('Failed to parsing JSON or send data:', error.response?.data || error);
