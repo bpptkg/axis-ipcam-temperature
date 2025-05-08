@@ -48,7 +48,8 @@ async function getSessionId(): Promise<string | null> {
         return await res.json();
     } catch (error) {
         console.error('Failed to get session ID:', error);
-        return null;
+        await waitTenSeconds()
+        process.exit(1);
     }
 }
 
@@ -56,11 +57,6 @@ let exitTimeout: NodeJS.Timeout;
 
 // Function to start WebSocket connection
 async function startWebSocket(sessionId: string): Promise<void> {
-    if (!sessionId) {
-        console.error('No session ID, cannot start WebSocket');
-        return;
-    }
-
     const ws = new WebSocket(`ws://${CAMERA_IP}/vapix/ws-data-stream?wssession=${sessionId}&sources=events`, {
         rejectUnauthorized: false
     });
